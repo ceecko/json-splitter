@@ -16,16 +16,24 @@ try:
     f = open(file_name)
     file_size = os.path.getsize(file_name)
     data = json.load(f)
+    if len(data['db']) == 0:
+        print('Does not look like a Ghost export json')
+        print(data)
+        exit()
     
-    if isinstance(data, list):
-        data_len = len(data)
+    posts = data['db'][0]['data']['posts']
+    del data['db'][0]['data']['posts']
+
+    if isinstance(posts, list):
+        data_len = len(posts)
         print('Valid JSON file found')
     else:
         print("JSON is not an Array of Objects")
         exit()
 
-except:
+except Exception as err:
     print('Error loading JSON file ... exiting')
+    print(err)
     exit()
 
 # get numeric input
@@ -55,12 +63,14 @@ starts.append(data_len)
 for i in range(0,num_files):
     # loop through each range in array
     for n in range(starts[i],starts[i+1]):
-        split_data[i].append(data[n])
+        split_data[i].append(posts[n])
     
     # create file when section is complete
     name = os.path.basename(file_name).split('.')[0] + '_' + str(i+1) + '.json'
     with open(name, 'w') as outfile:
-        json.dump(split_data[i], outfile)
+        out = data
+        out['db'][0]['data']['posts'] = split_data[i]
+        json.dump(out, outfile)
         
     print('Part',str(i+1),'... completed')
 
